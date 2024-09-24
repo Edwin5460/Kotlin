@@ -10,13 +10,12 @@ class PrincipalActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_principal)
 
-
-        val btnjugar= findViewById<Button>(R.id.btnjugar)
-        btnjugar.setOnClickListener { navegar() }
+        val btnJugar = findViewById<Button>(R.id.btnjugar)
+        btnJugar.setOnClickListener { navegar() }
     }
 
-    fun navegar(){
-        val intent= Intent(this,NinoActivity::class.java)
+    fun navegar() {
+        val intent = Intent(this, NinoActivity::class.java)
         startActivity(intent)
     }
 }

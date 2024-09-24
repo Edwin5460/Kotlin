@@ -7,67 +7,31 @@ import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
+import android.widget.Toast
 
-class  NinoActivity : AppCompatActivity() {
+class NinoActivity : AppCompatActivity() {
 
-    private val preguntas = listOf(
-        "¿Cuantas manzanas hay?",
-        "¿Ubicar las siguientes unidades en el abaco?",
-        "¿Cuantos lapices hay?",
-        "¿Cual es el resultado de esta resta?",
-        "¿Cual es el número anterior a:?",
-        "¿Cual es el número anterior a:?",
-        // Agrega más preguntas aquí según sea necesario
-    )
-
-    private val opciones = listOf(
-        listOf("4", "3", "5"),
-        listOf("435", "565", "875"),
-        listOf("10", "7", "8"),
-        listOf("3", "2", "1"),
-        listOf("2", "0", "4"),
-        listOf("3", "2", "4"),
-        // Agrega más listas de opciones aquí según sea necesario
-    )
-
-    private val imagenes = listOf(
-        R.drawable.manzanas,
-        R.drawable.abaco,
-        R.drawable.lapices,
-        R.drawable.resta,
-        R.drawable.uno,
-        R.drawable.cinco,
-        // Agrega más imágenes aquí según sea necesario
-    )
-
-    private var indexPreguntaActual = 0
+    private lateinit var databaseHelper: DatabaseHelper
+    private var indexPreguntaActual = 1 // Empezamos en la primera pregunta
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nino)
 
-        val textViewPregunta = findViewById<TextView>(R.id.textViewPregunta)
-        val radioGroup = findViewById<RadioGroup>(R.id.radioGroup)
-        val botonSiguiente = findViewById<Button>(R.id.botonSiguiente)
+        // Inicializar la base de datos
+        databaseHelper = DatabaseHelper(this)
 
-        // Mostrar la primera pregunta y sus opciones de respuesta
+        // Mostrar la primera pregunta y sus opciones
         mostrarPregunta()
 
+        val botonSiguiente = findViewById<Button>(R.id.botonSiguiente)
         botonSiguiente.setOnClickListener {
-            // Guardar la respuesta seleccionada
-            val radioButtonSeleccionadoId = radioGroup.checkedRadioButtonId
-            val radioButtonSeleccionado = findViewById<RadioButton>(radioButtonSeleccionadoId)
-            val respuestaSeleccionada = radioButtonSeleccionado.text.toString()
-            // Aquí puedes guardar la respuesta en algún lugar o hacer lo que quieras con ella
-
             // Mostrar la siguiente pregunta
             indexPreguntaActual++
-            if (indexPreguntaActual < preguntas.size) {
+            if (indexPreguntaActual <= 6) {
                 mostrarPregunta()
             } else {
-                // Se han respondido todas las preguntas, puedes realizar alguna acción final aquí
-                // Por ejemplo, mostrar un mensaje de agradecimiento o cerrar la actividad
-                finish()
+                finish() // Termina la actividad cuando no hay más preguntas
             }
         }
     }
@@ -77,19 +41,34 @@ class  NinoActivity : AppCompatActivity() {
         val imageViewPregunta = findViewById<ImageView>(R.id.imageViewPregunta)
         val radioGroup = findViewById<RadioGroup>(R.id.radioGroup)
 
-        // Mostrar la pregunta actual
-        textViewPregunta.text = preguntas[indexPreguntaActual]
+        // Obtener la pregunta y las opciones
+        val pregunta = databaseHelper.obtenerPregunta(indexPreguntaActual)
+        val opciones = databaseHelper.obtenerOpciones(indexPreguntaActual)
 
-        imageViewPregunta.setImageResource(imagenes[indexPreguntaActual])
+        if (pregunta == null) {
+            // Mostrar un mensaje si no se encuentra la pregunta
+            Toast.makeText(this, "No se encontró la pregunta.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Mostrar la pregunta y su imagen
+        textViewPregunta.text = pregunta.texto
+        imageViewPregunta.setImageResource(pregunta.imagenResId)
 
         // Limpiar las opciones de respuesta anteriores
         radioGroup.removeAllViews()
 
-        // Agregar las opciones de respuesta para la pregunta actual
-        for (opcion in opciones[indexPreguntaActual]) {
-            val radioButton = RadioButton(this)
-            radioButton.text = opcion
-            radioGroup.addView(radioButton)
+        // Mostrar las opciones
+        if (opciones.isNotEmpty()) {
+            for (opcion in opciones) {
+                val radioButton = RadioButton(this)
+                radioButton.text = opcion
+                radioGroup.addView(radioButton)
+            }
+        } else {
+            // Si no hay opciones, mostrar un mensaje
+            Toast.makeText(this, "No se encontraron opciones para esta pregunta.", Toast.LENGTH_SHORT).show()
         }
     }
 }
+
